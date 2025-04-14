@@ -17,7 +17,7 @@ showSyntax() {
   echo "               [{--switch-generation | -G} generation] [--verbose...] [-v...]" >&2
   echo "               [-Q] [{--max-jobs | -j} number] [--cores number] [--dry-run]" >&2
   echo "               [--keep-going | -k] [--keep-failed | -K] [--fallback] [--show-trace]" >&2
-  echo "               [--print-build-logs | -L] [--impure] [-I path]" >&2
+  echo "               [--print-build-logs | -L] [--impure] [-I path] [--sudo]" >&2
   echo "               [--option name value] [--arg name value] [--argstr name value]" >&2
   echo "               [--no-flake | [--flake flake]" >&2
   echo "                             [--commit-lock-file] [--recreate-lock-file]" >&2
@@ -38,6 +38,7 @@ profile=@profile@
 action=
 flake=
 noFlake=
+useSudo=0
 
 while [ $# -gt 0 ]; do
   i=$1; shift 1
@@ -51,6 +52,9 @@ while [ $# -gt 0 ]; do
     --show-trace|--keep-going|--keep-failed|--verbose|-v|-vv|-vvv|-vvvv|-vvvvv|--fallback|--offline)
       extraMetadataFlags+=("$i")
       extraBuildFlags+=("$i")
+      ;;
+    --sudo)
+      useSudo=1
       ;;
     --no-build-hook|--dry-run|-k|-K|-Q)
       extraBuildFlags+=("$i")
@@ -142,7 +146,7 @@ done
 
 if [ -z "$action" ]; then showSyntax; fi
 
-if [[ $action =~ ^switch|activate|rollback|check$ && $(id -u) -ne 0 ]]; then
+if [[ $action =~ ^switch|activate|rollback|check$ && $(id -u) -ne 0 && "$useSudo" != "1" ]]; then
   printf >&2 '%s: system activation must now be run as root\n' "$0"
   exit 1
 fi
@@ -233,15 +237,24 @@ runActivateUser() {
   fi
 }
 
+maybeSudo() {
+  local command="$@"
+  if [[ "$useSudo" = 1 ]]; then
+    command sudo -H --preserve-env=PATH --preserve-env=SSH_CONNECTION env "$@"
+  else
+    $command
+  fi
+}
+
 if [ "$action" = switch ]; then
-  nix-env -p "$profile" --set "$systemConfig"
+  maybeSudo nix-env -p "$profile" --set "$systemConfig"
 fi
 
 if [ "$action" = switch ] || [ "$action" = activate ] || [ "$action" = rollback ]; then
   if [[ -n $hasActivateUser ]]; then
     runActivateUser
   fi
-  "$systemConfig/activate"
+  maybeSudo "$systemConfig/activate"
 fi
 
 if [ "$action" = changelog ]; then
@@ -253,6 +266,6 @@ if [ "$action" = check ]; then
   if [[ -n $hasActivateUser ]]; then
     runActivateUser
   else
-    "$systemConfig/activate"
+    maybeSudo "$systemConfig/activate"
   fi
 fi
