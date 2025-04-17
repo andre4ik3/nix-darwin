@@ -15,9 +15,9 @@ showSyntax() {
   echo "darwin-rebuild [--help] {edit | switch | activate | build | check | changelog}" >&2
   echo "               [--list-generations] [{--profile-name | -p} name] [--rollback]" >&2
   echo "               [{--switch-generation | -G} generation] [--verbose...] [-v...]" >&2
-  echo "               [-Q] [{--max-jobs | -j} number] [--cores number] [--dry-run]" >&2
+  echo "               [-Q] [{--max-jobs | -j} number] [--cores number] [--dry-run] [--sudo]" >&2
   echo "               [--keep-going | -k] [--keep-failed | -K] [--fallback] [--show-trace]" >&2
-  echo "               [--print-build-logs | -L] [--impure] [-I path] [--sudo]" >&2
+  echo "               [--print-build-logs | -L] [--impure] [-I path] [--log-format format]" >&2
   echo "               [--option name value] [--arg name value] [--argstr name value]" >&2
   echo "               [--no-flake | [--flake flake]" >&2
   echo "                             [--commit-lock-file] [--recreate-lock-file]" >&2
@@ -62,7 +62,7 @@ while [ $# -gt 0 ]; do
     -j[0-9]*)
       extraBuildFlags+=("$i")
       ;;
-    --max-jobs|-j|--cores|-I)
+    --max-jobs|-j|--cores|-I|--log-format)
       if [ $# -lt 1 ]; then
         echo "$0: '$i' requires an argument"
         exit 1
