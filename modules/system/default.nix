@@ -137,6 +137,7 @@ in
       darwinVersionJson = (pkgs.formats.json {}).generate "darwin-version.json" (
         filterAttrs (k: v: v != null) {
           inherit (config.system) darwinRevision nixpkgsRevision configurationRevision darwinLabel;
+          nixpkgsLabel = lib.trivial.version;
         }
       );
 
