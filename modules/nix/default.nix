@@ -834,6 +834,7 @@ in
           assertion = cfg.settings.auto-optimise-store -> (
             (cfg.package.pname == "lix" && (isNixAtLeast "2.92.0" && versionAtLeast (strings.removePrefix "-" cfg.package.VERSION_SUFFIX) "pre20241107"))
             || (cfg.package.pname == "nix" && ((isNixAtLeast "2.31.3" && !isNixAtLeast "2.32") || isNixAtLeast "2.32.5" || isNixAtLeast "2.33"))
+            || (cfg.package.pname == "determinate-nix" && isNixAtLeast "3.15.0")
           );
           message = "`nix.settings.auto-optimise-store` is known to corrupt the Nix Store, please use `nix.optimise.automatic` instead.";
         }
